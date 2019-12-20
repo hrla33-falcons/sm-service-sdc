@@ -5,12 +5,18 @@ import axios from 'axios'
 import rightArrow from './images/right-arrow.svg'
 import './App.scss'
 
+function rand(min, max) {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
 function App() {
   const [data, setData] = useState()
 
   useEffect(() => {
     axios
-      .get('/reviews')
+      .get('/reviews/')
       .then(response => {
         const data = response.data
         const averages = {

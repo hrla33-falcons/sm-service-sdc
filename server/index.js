@@ -1,36 +1,18 @@
 const express = require('express')
-const mongoose = require('mongoose')
-const Product = require('../db/models/Product')
-const Review = require('../db/models/Review')
-
+const morgan = require('morgan')
+const bodyParser = require('body-parser')
+const Controller = require('../db/controller')
 const app = express()
 
-mongoose.connect('mongodb://localhost/fec', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-
+app.use(morgan('dev'))
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/../client/dist'))
 
-app.get('/reviews', (req, res) => {
-  const id = rand(1, 100)
-  Product.findOne({ id: id }, (err, product) => {
-    if (err) console.error(err)
-    else {
-      Review.find({ productId: id }, (err, reviews) => {
-        if (err) console.error(err)
-        else {
-          res.send({ product, reviews })
-        }
-      })
-    }
-  })
-})
+app.get('/reviews', Controller.get)
+app.get('/reviews/:id', Controller.getOne)
+app.post('/reviews', Controller.post)
+app.put('/reviews/:id', Controller.put)
+app.delete('/reviews/:id', Controller.delete)
 
 app.listen(3003, () => console.log('app listening on port 3003'))
-
-function rand(min, max) {
-  min = Math.ceil(min)
-  max = Math.floor(max)
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
