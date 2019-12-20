@@ -51,7 +51,7 @@ for (i = 0; i < 300; i++) {
   reviews.push(data)
 }
 
-Product.remove({}, err => {
+Product.deleteMany(err => {
   if (err) console.error(err)
   else {
     console.log('removed products')
@@ -59,7 +59,7 @@ Product.remove({}, err => {
       if (err) console.error(err)
       else {
         console.log('generated products')
-        Review.remove({}, err => {
+        Review.deleteMany(err => {
           if (err) console.error(err)
           else {
             console.log('removed reviews')

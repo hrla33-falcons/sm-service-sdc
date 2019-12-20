@@ -24,10 +24,12 @@
   "homepage": "https://github.com/objectobject-hr/service-blake#readme",
   "dependencies": {
     "axios": "^0.19.0",
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "faker": "^4.1.0",
     "moment": "^2.24.0",
     "mongoose": "^5.7.13",
+    "morgan": "^1.9.1",
     "node-sass": "^4.13.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
