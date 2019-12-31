@@ -61,3 +61,7 @@ typings/
 .next
 
 client/dist
+
+# Dummy data
+products.csv
+reviews.csv
