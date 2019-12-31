@@ -121,6 +121,6 @@ const writeAll = (numRecords, writer, generator, callback) => {
 writeAll(7000000, writeProductStream, generateProduct, () => {
   writeAll(3000000, writeReviewStream, generateReview, () => {
     const milli = Date.now() - start
-    return console.log(`Total time: ${Math.floor(milli/1000)}`)
+    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
   })
 })
