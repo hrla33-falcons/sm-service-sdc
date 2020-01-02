@@ -1,6 +1,53 @@
 const start = Date.now()
 const fs = require('fs')
+const path = require('path')
 const faker = require('faker')
+const { Client } = require('pg')
+const abPath1 = path.resolve('../service-blake/products.csv')
+const abPath2 = path.resolve('../service-blake/reviews.csv')
+const client = new Client({
+  connectionString: 'postgresql://localhost/reviews-service'
+})
+client.connect()
+async function createTables() {
+  await client.query('DROP TABLE IF EXISTS products, reviews;')
+  await client.query(
+    `CREATE TABLE products(
+      id SERIAL,
+      identifier VARCHAR,
+      description VARCHAR,
+      length INTEGER,
+      width INTEGER,
+      height INTEGER,
+      care VARCHAR,
+      environment VARCHAR,
+      materials VARCHAR,
+      packages INTEGER,
+      name VARCHAR,
+      type VARCHAR
+    );`
+  )
+  await client.query(
+    `CREATE TABLE reviews(
+      id SERIAL,
+      valueForMoney INTEGER,
+      productQuality INTEGER,
+      appearance INTEGER,
+      ease INTEGER,
+      worksAsExpected INTEGER,
+      username VARCHAR,
+      date VARCHAR,
+      title VARCHAR,
+      text VARCHAR,
+      notHelpful INTEGER,
+      helpful INTEGER,
+      productId INTEGER,
+      recommend BOOLEAN,
+      stars INTEGER
+    );`
+  )
+}
+createTables()
 
 // helpers
 const rand = (min, max) => {
@@ -13,15 +60,15 @@ const description = (min, max) => {
   const sentences = rand(min, max)
   let description = ''
   for (let i = 0; i < sentences; i++) {
-    if (i > 0) description += '\n\n'
     description += faker.lorem.sentence()
   }
   return description
 }
 
 // generators
-const generateProduct = () => {
+const generateProduct = id => {
   const data = {}
+  data.id = id
   data.identifier = `${rand(1, 999)}.${rand(1, 999)}.${rand(1, 999)}`
   data.description = description(5, 8)
   data.length = rand(1, 99)
@@ -37,8 +84,9 @@ const generateProduct = () => {
   return data
 }
 
-const generateReview = () => {
+const generateReview = id => {
   let data = {}
+  data.id = id
   data.valueForMoney = rand(1, 5)
   data.productQuality = rand(1, 5)
   data.appearance = rand(1, 5)
@@ -71,6 +119,7 @@ const writeAll = (numRecords, writer, generator, callback) => {
     for (var key in data) {
       header += `${key},`
     }
+    header = header.slice(0, -1)
     writer.write(`${header}\n`)
   }
 
@@ -80,15 +129,17 @@ const writeAll = (numRecords, writer, generator, callback) => {
     for (var key in data) {
       row += data[key] + ','
     }
-    return row;
+    return row.slice(0, -1);
   }
 
   const write = () => {
-    let ok = true;
+    let ok = true
+    let count = 1
 
     do {
 
-      let data = generator()
+      let data = generator(count)
+      count++
 
       if (i > headerRow) {
         writeHead(data)
@@ -107,12 +158,12 @@ const writeAll = (numRecords, writer, generator, callback) => {
         ok = writer.write(`${row}\n`)
       }
       i--;
-    } while (i > 0 && ok);
+    } while (i > 0 && ok)
 
     if (i > 1) {
       // Had to stop early!
       // Write some more once it drains.
-      writer.once('drain', write);
+      writer.once('drain', write)
     }
   }
   write();
@@ -120,7 +171,19 @@ const writeAll = (numRecords, writer, generator, callback) => {
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
   writeAll(3000000, writeReviewStream, generateReview, () => {
-    const milli = Date.now() - start
-    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+    client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`, (err, done) => {
+      if (err) {
+        return console.log(err)
+      }
+      client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`, (err, done) => {
+        if (err) {
+          client.end()
+          return console.log(err)
+        }
+        client.end()
+        const milli = Date.now() - start
+        return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+      })
+    })
   })
 })
