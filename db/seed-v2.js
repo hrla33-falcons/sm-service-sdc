@@ -10,42 +10,46 @@ const client = new Client({
 })
 client.connect()
 async function createTables() {
-  await client.query('DROP TABLE IF EXISTS products, reviews;')
-  await client.query(
-    `CREATE TABLE products(
-      id SERIAL,
-      identifier VARCHAR,
-      description VARCHAR,
-      length INTEGER,
-      width INTEGER,
-      height INTEGER,
-      care VARCHAR,
-      environment VARCHAR,
-      materials VARCHAR,
-      packages INTEGER,
-      name VARCHAR,
-      type VARCHAR
-    );`
-  )
-  await client.query(
-    `CREATE TABLE reviews(
-      id SERIAL,
-      valueForMoney INTEGER,
-      productQuality INTEGER,
-      appearance INTEGER,
-      ease INTEGER,
-      worksAsExpected INTEGER,
-      username VARCHAR,
-      date VARCHAR,
-      title VARCHAR,
-      text VARCHAR,
-      notHelpful INTEGER,
-      helpful INTEGER,
-      productId INTEGER,
-      recommend BOOLEAN,
-      stars INTEGER
-    );`
-  )
+  try {
+    await client.query('DROP TABLE IF EXISTS products, reviews;')
+    await client.query(
+      `CREATE TABLE products(
+        id SERIAL,
+        identifier VARCHAR,
+        description VARCHAR,
+        length INTEGER,
+        width INTEGER,
+        height INTEGER,
+        care VARCHAR,
+        environment VARCHAR,
+        materials VARCHAR,
+        packages INTEGER,
+        name VARCHAR,
+        type VARCHAR
+      );`
+    )
+    await client.query(
+      `CREATE TABLE reviews(
+        id SERIAL,
+        valueForMoney INTEGER,
+        productQuality INTEGER,
+        appearance INTEGER,
+        ease INTEGER,
+        worksAsExpected INTEGER,
+        username VARCHAR,
+        date VARCHAR,
+        title VARCHAR,
+        text VARCHAR,
+        notHelpful INTEGER,
+        helpful INTEGER,
+        productId INTEGER,
+        recommend BOOLEAN,
+        stars INTEGER
+      );`
+    )
+  } catch (e) {
+    throw e
+  }
 }
 createTables()
 
