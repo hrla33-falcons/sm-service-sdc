@@ -9,6 +9,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/../client/dist'))
 
+// Mongo version
 app.get('/reviews', Controller.get)
 app.get('/reviews/:id', Controller.getOne)
 app.post('/reviews', Controller.post)
