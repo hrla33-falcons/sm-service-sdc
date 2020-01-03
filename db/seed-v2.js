@@ -114,7 +114,7 @@ let writeProductStream = fs.createWriteStream('products.csv')
 let writeReviewStream = fs.createWriteStream('reviews.csv')
 
 const writeAll = (numRecords, writer, generator, callback) => {
-  let i = numRecords
+  let count = 1
   let headerRow = numRecords - 1
 
   // CSV header
@@ -138,19 +138,17 @@ const writeAll = (numRecords, writer, generator, callback) => {
 
   const write = () => {
     let ok = true
-    let count = 1
 
     do {
 
-      let data = generator(count)
-      count++
+      let data = generator(count++)
 
-      if (i > headerRow) {
+      if (numRecords > headerRow) {
         writeHead(data)
       }
 
       let row = writeRow(data)
-      if (i === 1) {
+      if (numRecords === 1) {
         // Last time!
         writer.write(row)
         writer.end()
@@ -161,10 +159,10 @@ const writeAll = (numRecords, writer, generator, callback) => {
 
         ok = writer.write(`${row}\n`)
       }
-      i--;
-    } while (i > 0 && ok)
+      numRecords--;
+    } while (numRecords > 0 && ok)
 
-    if (i > 1) {
+    if (numRecords > 1) {
       // Had to stop early!
       // Write some more once it drains.
       writer.once('drain', write)
@@ -174,20 +172,16 @@ const writeAll = (numRecords, writer, generator, callback) => {
 }
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
-  writeAll(3000000, writeReviewStream, generateReview, () => {
-    client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`, (err, done) => {
-      if (err) {
-        return console.log(err)
-      }
-      client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`, (err, done) => {
-        if (err) {
-          client.end()
-          return console.log(err)
-        }
-        client.end()
-        const milli = Date.now() - start
-        return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
-      })
-    })
+  writeAll(3000000, writeReviewStream, generateReview, async () => {
+    try {
+      await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
+      await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
+      await client.end()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      const milli = Date.now() - start
+      return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+    }
   })
 })
