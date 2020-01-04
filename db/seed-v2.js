@@ -2,19 +2,20 @@ const start = Date.now()
 const fs = require('fs')
 const path = require('path')
 const faker = require('faker')
-const { Client } = require('pg')
+const { Pool } = require('pg')
 const abPath1 = path.resolve('../service-blake/products.csv')
 const abPath2 = path.resolve('../service-blake/reviews.csv')
-const client = new Client({
+const pool = new Pool({
   connectionString: 'postgresql://localhost/reviews-service'
 })
-client.connect()
-async function createTables() {
+
+const insertData = async () => {
+  const client = await pool.connect()
   try {
-    await client.query('DROP TABLE IF EXISTS products, reviews;')
+    await client.query('DROP TABLE IF EXISTS products,reviews;')
     await client.query(
       `CREATE TABLE products(
-        id SERIAL,
+        id SERIAL PRIMARY KEY,
         identifier VARCHAR,
         description VARCHAR,
         length INTEGER,
@@ -30,7 +31,7 @@ async function createTables() {
     )
     await client.query(
       `CREATE TABLE reviews(
-        id SERIAL,
+        id SERIAL PRIMARY KEY,
         valueForMoney INTEGER,
         productQuality INTEGER,
         appearance INTEGER,
@@ -47,11 +48,16 @@ async function createTables() {
         stars INTEGER
       );`
     )
+    await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
+    await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
   } catch (e) {
     throw e
+  } finally {
+    client.release()
+    const milli = Date.now() - start
+    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
   }
 }
-createTables()
 
 // helpers
 const rand = (min, max) => {
@@ -155,8 +161,6 @@ const writeAll = (numRecords, writer, generator, callback) => {
         callback()
       } else {
         // See if we should continue, or wait.
-        // Don't pass the callback, because we're not done yet.
-
         ok = writer.write(`${row}\n`)
       }
       numRecords--;
@@ -172,16 +176,7 @@ const writeAll = (numRecords, writer, generator, callback) => {
 }
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
-  writeAll(3000000, writeReviewStream, generateReview, async () => {
-    try {
-      await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
-      await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
-      await client.end()
-    } catch (e) {
-      console.error(e)
-    } finally {
-      const milli = Date.now() - start
-      return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
-    }
+  writeAll(3000000, writeReviewStream, generateReview, () => {
+    insertData().catch(e => console.error(e.stack))
   })
 })

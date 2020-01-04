@@ -13,10 +13,9 @@ const db = require('../db')
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await db.query(
-      "SELECT * FROM products WHERE id=$1",
+      "SELECT * FROM reviews WHERE id=$1",
       [req.params.id]
     )
-    console.log('rows: ', rows)
     return res.status(200).json(rows[0])
   } catch (e) {
     return res.status(404).send(e)
