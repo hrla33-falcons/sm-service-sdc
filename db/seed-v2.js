@@ -2,52 +2,66 @@ const start = Date.now()
 const fs = require('fs')
 const path = require('path')
 const faker = require('faker')
-const { Client } = require('pg')
+const { Pool } = require('pg')
 const abPath1 = path.resolve('../service-blake/products.csv')
 const abPath2 = path.resolve('../service-blake/reviews.csv')
-const client = new Client({
+const pool = new Pool({
   connectionString: 'postgresql://localhost/reviews-service'
 })
-client.connect()
-async function createTables() {
-  await client.query('DROP TABLE IF EXISTS products, reviews;')
-  await client.query(
-    `CREATE TABLE products(
-      id SERIAL,
-      identifier VARCHAR,
-      description VARCHAR,
-      length INTEGER,
-      width INTEGER,
-      height INTEGER,
-      care VARCHAR,
-      environment VARCHAR,
-      materials VARCHAR,
-      packages INTEGER,
-      name VARCHAR,
-      type VARCHAR
-    );`
-  )
-  await client.query(
-    `CREATE TABLE reviews(
-      id SERIAL,
-      valueForMoney INTEGER,
-      productQuality INTEGER,
-      appearance INTEGER,
-      ease INTEGER,
-      worksAsExpected INTEGER,
-      username VARCHAR,
-      date VARCHAR,
-      title VARCHAR,
-      text VARCHAR,
-      notHelpful INTEGER,
-      helpful INTEGER,
-      productId INTEGER,
-      recommend BOOLEAN,
-      stars INTEGER
-    );`
-  )
+
+const insertData = async () => {
+  const client = await pool.connect()
+  try {
+    await client.query('DROP TABLE IF EXISTS products,reviews;')
+    await client.query(
+      `CREATE TABLE products(
+        id SERIAL PRIMARY KEY,
+        identifier VARCHAR,
+        description VARCHAR,
+        length INTEGER,
+        width INTEGER,
+        height INTEGER,
+        care VARCHAR,
+        environment VARCHAR,
+        materials VARCHAR,
+        packages INTEGER,
+        name VARCHAR,
+        type VARCHAR
+      );`
+    )
+    await client.query(
+      `CREATE TABLE reviews(
+        id SERIAL PRIMARY KEY,
+        valueForMoney INTEGER,
+        productQuality INTEGER,
+        appearance INTEGER,
+        ease INTEGER,
+        worksAsExpected INTEGER,
+        username VARCHAR,
+        date VARCHAR,
+        title VARCHAR,
+        text VARCHAR,
+        notHelpful INTEGER,
+        helpful INTEGER,
+        productId INTEGER,
+        recommend BOOLEAN,
+        stars INTEGER
+      );`
+    )
+    await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
+    await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
+    await client.query('CREATE INDEX review_productId ON reviews(productId);')
+    await client.query('ALTER SEQUENCE products_id_seq RESTART WITH 7000001')
+    await client.query('ALTER SEQUENCE reviews_id_seq RESTART WITH 3000001')
+  } catch (e) {
+    throw e
+  } finally {
+    client.release()
+    pool.end()
+    const milli = Date.now() - start
+    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+  }
 }
-createTables()
 
 // helpers
 const rand = (min, max) => {
@@ -110,7 +124,7 @@ let writeProductStream = fs.createWriteStream('products.csv')
 let writeReviewStream = fs.createWriteStream('reviews.csv')
 
 const writeAll = (numRecords, writer, generator, callback) => {
-  let i = numRecords
+  let count = 1
   let headerRow = numRecords - 1
 
   // CSV header
@@ -134,33 +148,29 @@ const writeAll = (numRecords, writer, generator, callback) => {
 
   const write = () => {
     let ok = true
-    let count = 1
 
     do {
 
-      let data = generator(count)
-      count++
+      let data = generator(count++)
 
-      if (i > headerRow) {
+      if (numRecords > headerRow) {
         writeHead(data)
       }
 
       let row = writeRow(data)
-      if (i === 1) {
+      if (numRecords === 1) {
         // Last time!
         writer.write(row)
         writer.end()
         callback()
       } else {
         // See if we should continue, or wait.
-        // Don't pass the callback, because we're not done yet.
-
         ok = writer.write(`${row}\n`)
       }
-      i--;
-    } while (i > 0 && ok)
+      numRecords--;
+    } while (numRecords > 0 && ok)
 
-    if (i > 1) {
+    if (numRecords > 1) {
       // Had to stop early!
       // Write some more once it drains.
       writer.once('drain', write)
@@ -170,20 +180,7 @@ const writeAll = (numRecords, writer, generator, callback) => {
 }
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
-  writeAll(3000000, writeReviewStream, generateReview, () => {
-    client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`, (err, done) => {
-      if (err) {
-        return console.log(err)
-      }
-      client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`, (err, done) => {
-        if (err) {
-          client.end()
-          return console.log(err)
-        }
-        client.end()
-        const milli = Date.now() - start
-        return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
-      })
-    })
-  })
+  writeAll(3000000, writeReviewStream, generateReview, () => (
+    insertData().catch(e => console.error(e.stack))
+  ))
 })

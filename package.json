@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "client:dev": "webpack -d --watch",
-    "server:dev": "nodemon server",
+    "client": "webpack -d --watch",
+    "server:mg": "nodemon server/mg.js",
+    "server:pg": "nodemon server/pg.js",
     "seed": "node db/seed.js",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\""
   },
