@@ -50,10 +50,14 @@ const insertData = async () => {
     )
     await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
     await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
+    await client.query('CREATE INDEX review_productId ON reviews(productId);')
+    await client.query('ALTER SEQUENCE products_id_seq RESTART WITH 7000001')
+    await client.query('ALTER SEQUENCE reviews_id_seq RESTART WITH 3000001')
   } catch (e) {
     throw e
   } finally {
     client.release()
+    pool.end()
     const milli = Date.now() - start
     return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
   }
@@ -176,7 +180,7 @@ const writeAll = (numRecords, writer, generator, callback) => {
 }
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
-  writeAll(3000000, writeReviewStream, generateReview, () => {
+  writeAll(3000000, writeReviewStream, generateReview, () => (
     insertData().catch(e => console.error(e.stack))
-  })
+  ))
 })
