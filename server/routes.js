@@ -62,7 +62,7 @@ router.post('/', async (req, res) => {
     stars
   } = req.body
   try {
-    const confirmation = await db.query(
+    const { rows } = await db.query(
       `INSERT INTO reviews (
         valueForMoney,
         productQuality,
@@ -78,7 +78,7 @@ router.post('/', async (req, res) => {
         productId,
         recommend,
         stars
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14);`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *;`,
       [
         valueForMoney,
         productQuality,
@@ -96,7 +96,7 @@ router.post('/', async (req, res) => {
         stars
       ]
     )
-    res.status(201).end()
+    res.status(201).send(rows[0])
   } catch (e) {
     console.error(e)
     return res.status(400).end(e)
