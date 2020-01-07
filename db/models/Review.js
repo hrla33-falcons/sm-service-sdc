@@ -2,7 +2,10 @@ const mongoose = require('mongoose')
 const faker = require('faker')
 
 const schema = new mongoose.Schema({
-  id: Number,
+  id: {
+    type: Number,
+    index: true
+  },
   valueForMoney: Number,
   productQuality: Number,
   Appearance: Number,
@@ -14,7 +17,10 @@ const schema = new mongoose.Schema({
   text: String,
   notHelpful: Number,
   helpful: Number,
-  productId: Number,
+  productId: {
+    type: Number,
+    index: true
+  },
   recommend: Boolean
 })
 

@@ -10,6 +10,8 @@
     "server:mg": "nodemon server/mg.js",
     "server:pg": "nodemon server/pg.js",
     "seed": "node db/seed.js",
+    "seed:pg": "node db/seed-v2.js",
+    "seed:mg": "node db/seed-v3.js",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\""
   },
   "repository": {
