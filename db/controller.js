@@ -2,9 +2,10 @@ const mongoose = require('mongoose')
 const Product = require('./models/Product')
 const Review = require('./models/Review')
 const faker = require('faker')
-mongoose.connect('mongodb://localhost/fec', {
+mongoose.connect('mongodb://localhost/reviews-service', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  useCreateIndex: true
 })
 
 function rand(min, max) {
@@ -29,7 +30,7 @@ module.exports = {
     })
   },
   get: function(req, res) {
-    const id = rand(1, 100)
+    const id = rand(1, 7000000)
     Product.findOne({ id }, (err, product) => {
       if (err) {
         res.status(404).send(err)
@@ -43,7 +44,7 @@ module.exports = {
     })
   },
   post: function(req, res) {
-    const productId = rand(1, 100)
+    const productId = rand(1, 7000000)
     let review = req.body
     review.productId = productId
     Review.estimatedDocumentCount()

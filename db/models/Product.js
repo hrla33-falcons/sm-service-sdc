@@ -1,7 +1,10 @@
 const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
-  id: Number,
+  id: {
+    type: Number,
+    index: true
+  },
   identifier: String,
   description: String,
   length: Number,

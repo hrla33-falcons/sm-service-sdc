@@ -2,64 +2,32 @@ const start = Date.now()
 const fs = require('fs')
 const path = require('path')
 const faker = require('faker')
-const { Pool } = require('pg')
+const { exec } = require('child_process')
 const abPath1 = path.resolve('../service-blake/products.csv')
 const abPath2 = path.resolve('../service-blake/reviews.csv')
-const pool = new Pool({
-  connectionString: 'postgresql://localhost/reviews-service'
-})
-
+const mongoURI = 'mongodb://localhost/reviews-service'
 const insertData = async () => {
-  const client = await pool.connect()
+  const insertReviews = async () => {
+    try {
+      await exec(
+        `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ${abPath2}`,
+        () => {
+          const milli = Date.now() - start
+          return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+        }
+      )
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   try {
-    await client.query('DROP TABLE IF EXISTS products,reviews;')
-    await client.query(
-      `CREATE TABLE products(
-        id SERIAL PRIMARY KEY,
-        identifier VARCHAR,
-        description VARCHAR,
-        length INTEGER,
-        width INTEGER,
-        height INTEGER,
-        care VARCHAR,
-        environment VARCHAR,
-        materials VARCHAR,
-        packages INTEGER,
-        name VARCHAR,
-        type VARCHAR
-      );`
+    await exec(
+      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ${abPath1}`,
+      insertReviews
     )
-    await client.query(
-      `CREATE TABLE reviews(
-        id SERIAL PRIMARY KEY,
-        valueForMoney INTEGER,
-        productQuality INTEGER,
-        appearance INTEGER,
-        ease INTEGER,
-        worksAsExpected INTEGER,
-        username VARCHAR,
-        date VARCHAR,
-        title VARCHAR,
-        text VARCHAR,
-        notHelpful INTEGER,
-        helpful INTEGER,
-        productId INTEGER,
-        recommend BOOLEAN,
-        stars INTEGER
-      );`
-    )
-    await client.query(`COPY products FROM '${abPath1}' DELIMITER ',' CSV HEADER;`)
-    await client.query(`COPY reviews FROM '${abPath2}' DELIMITER ',' CSV HEADER;`)
-    await client.query('CREATE INDEX review_productId ON reviews(productId);')
-    await client.query('ALTER SEQUENCE products_id_seq RESTART WITH 7000001')
-    await client.query('ALTER SEQUENCE reviews_id_seq RESTART WITH 3000001')
   } catch (e) {
     console.error(e)
-  } finally {
-    client.release()
-    pool.end()
-    const milli = Date.now() - start
-    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
   }
 }
 
