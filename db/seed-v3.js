@@ -1,16 +1,13 @@
 const start = Date.now()
 const fs = require('fs')
-const path = require('path')
 const faker = require('faker')
 const { exec } = require('child_process')
-const abPath1 = path.resolve('../service-blake/products.csv')
-const abPath2 = path.resolve('../service-blake/reviews.csv')
 const mongoURI = 'mongodb://localhost/reviews-service'
 const insertData = async () => {
   const insertReviews = async () => {
     try {
       await exec(
-        `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ${abPath2}`,
+        `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./reviews.csv`,
         () => {
           const milli = Date.now() - start
           return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
@@ -23,7 +20,7 @@ const insertData = async () => {
 
   try {
     await exec(
-      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ${abPath1}`,
+      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./products.csv`,
       insertReviews
     )
   } catch (e) {
