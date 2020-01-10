@@ -1,32 +1,8 @@
 const start = Date.now()
 const fs = require('fs')
 const faker = require('faker')
-const { exec } = require('child_process')
+const { execSync } = require('child_process')
 const mongoURI = 'mongodb://localhost/reviews-service'
-const insertData = async () => {
-  const insertReviews = async () => {
-    try {
-      await exec(
-        `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./reviews.csv`,
-        () => {
-          const milli = Date.now() - start
-          return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
-        }
-      )
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  try {
-    await exec(
-      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./products.csv`,
-      insertReviews
-    )
-  } catch (e) {
-    console.error(e)
-  }
-}
 
 // helpers
 const rand = (min, max) => {
@@ -145,7 +121,10 @@ const writeAll = (numRecords, writer, generator, callback) => {
 }
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
-  writeAll(3000000, writeReviewStream, generateReview, () => (
-    insertData().catch(e => console.error(e.stack))
-  ))
+  writeAll(3000000, writeReviewStream, generateReview, () => {
+    execSync(`mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./products.csv`)
+    execSync(`mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./reviews.csv`)
+    const milli = Date.now() - start
+    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+  })
 })
