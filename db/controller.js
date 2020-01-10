@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Product = require('./models/Product')
 const Review = require('./models/Review')
 const faker = require('faker')
-mongoose.connect('mongodb://52.53.242.138/reviews-service', {
+mongoose.connect('mongodb://54.215.130.33/reviews-service', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true
