@@ -1,4 +1,3 @@
-const start = Date.now()
 const fs = require('fs')
 const faker = require('faker')
 const { execSync } = require('child_process')
@@ -122,9 +121,13 @@ const writeAll = (numRecords, writer, generator, callback) => {
 
 writeAll(7000000, writeProductStream, generateProduct, () => {
   writeAll(3000000, writeReviewStream, generateReview, () => {
-    execSync(`mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./products.csv`)
-    execSync(`mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./reviews.csv`)
-    const milli = Date.now() - start
-    return console.log(`Total time: ${Math.floor(milli/1000)} seconds`)
+    execSync(
+      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./products.csv`,
+      { stdio: 'inherit'}
+    )
+    execSync(
+      `mongoimport --uri ${mongoURI} --type csv --headerline --drop --file ./reviews.csv`,
+      { stdio: 'inherit'}
+    )
   })
 })
