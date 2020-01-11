@@ -26,8 +26,8 @@ module.exports = {
           res.status(404).send(err)
         }
         res.status(200).send({product, review})
-      })
-    })
+      }).lean()
+    }).lean()
   },
   get: function(req, res) {
     const id = rand(1, 7000000)
@@ -40,8 +40,8 @@ module.exports = {
           res.status(404).send(err)
         }
         res.status(200).send({product, reviews})
-      })
-    })
+      }).lean()
+    }).lean()
   },
   post: function(req, res) {
     const productId = rand(1, 7000000)
