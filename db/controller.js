@@ -2,12 +2,10 @@ const mongoose = require('mongoose')
 const Product = require('./models/Product')
 const Review = require('./models/Review')
 const faker = require('faker')
-mongoose.connect('mongodb://54.67.124.55/reviews-service?authSource=admin', {
+mongoose.connect('mongodb://13.52.231.120/reviews-service', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true,
-  user: 'stevejrmc',
-  pass: 'admin'
+  useCreateIndex: true
 })
 
 function rand(min, max) {
