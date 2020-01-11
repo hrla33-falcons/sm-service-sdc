@@ -6,7 +6,6 @@ mongoose.connect('mongodb://54.67.124.55/reviews-service?authSource=admin', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
-  useMongoClient: true,
   user: 'stevejrmc',
   pass: 'admin'
 })
