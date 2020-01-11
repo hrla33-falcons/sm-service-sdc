@@ -10,8 +10,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/../client/dist'))
 
 // loaderio verification
-app.get('/loaderio-84f46b8a0bcf09f289e60658c7a7f157', (req, res) => {
-  res.status(200).sendFile(__dirname + '/loaderio-84f46b8a0bcf09f289e60658c7a7f157.txt')
+app.get('/loaderio-30e42b3fa32d8b56ba35cfb15e2df87a', (req, res) => {
+  res.status(200).sendFile(__dirname + '/loaderio-30e42b3fa32d8b56ba35cfb15e2df87a.txt')
 })
 
 app.get('/reviews', Controller.get)
